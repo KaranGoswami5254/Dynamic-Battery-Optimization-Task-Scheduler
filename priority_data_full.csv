@@ -1,0 +1,251 @@
+task_name,energy,deadline_hours,cpu,battery,priority
+Watching YouTube,90,21,18,80,High
+Reading News,14,24,77,64,Low
+Online Class,42,15,36,85,Medium
+Running Simulation,39,7,68,99,Medium
+Browsing Internet,34,2,33,95,High
+File Download,26,5,28,100,Medium
+Reading News,67,16,52,66,Medium
+Watching Movie,85,21,24,40,High
+Editing Videos,70,1,82,41,High
+Mobile Game,16,18,10,28,Low
+Listening to Music,44,15,86,70,Medium
+Checking Email,47,17,59,97,Medium
+Mobile Game,58,10,21,40,Medium
+Coding Project,12,16,59,41,Low
+Watching YouTube,32,11,77,97,Low
+Checking Email,58,13,17,52,Medium
+IDE Work,86,1,76,84,High
+Gaming (Casual),77,1,42,95,High
+Data Entry,34,13,56,72,Low
+Reading News,37,7,47,48,Medium
+Virtual Meeting,23,19,51,63,Low
+Video Call,53,7,35,21,Medium
+Light Document Work,23,17,32,76,Low
+Streaming TV Show,25,24,60,65,Low
+Charging Phone,8,23,33,40,Low
+Strategy Game,42,2,36,68,High
+Online Class,32,8,63,61,Medium
+Virtual Meeting,31,18,53,91,Low
+Gaming (Casual),7,15,57,47,Low
+Checking Email,51,17,14,72,Medium
+Mobile Game,7,4,85,45,Medium
+Strategy Game,74,3,14,29,High
+Video Call,31,24,40,80,Low
+Watching YouTube,36,3,52,71,High
+Streaming TV Show,47,14,35,31,Medium
+Running Simulation,38,13,20,99,Low
+Reading PDF,35,22,47,60,Low
+Gaming (Heavy),68,16,49,26,Medium
+Strategy Game,41,14,83,76,Medium
+Reading News,80,18,49,44,High
+Report Writing,81,5,10,97,High
+Watching Movie,8,18,40,68,Low
+Editing Photos,75,18,54,65,High
+Reading PDF,18,3,31,74,High
+Virtual Meeting,20,18,64,72,Low
+Watching Movie,76,2,74,52,High
+Gaming (Heavy),57,23,89,50,Medium
+Reading PDF,20,1,25,79,High
+Social Media Scroll,53,6,76,85,Medium
+Listening to Music,83,17,22,46,High
+Online Class,32,21,60,54,Low
+Reading News,87,7,80,86,High
+File Download,68,11,51,20,Medium
+Strategy Game,14,19,72,59,Low
+Charging Phone,40,12,46,41,Low
+Writing Notes,47,12,37,54,Medium
+Social Media Scroll,60,9,72,85,Medium
+Gaming (Casual),22,1,21,81,High
+Coding Project,26,7,49,37,Medium
+Strategy Game,66,14,30,95,Medium
+Mobile Game,82,7,57,22,High
+Watching YouTube,12,16,88,72,Low
+Browsing Internet,24,9,51,22,Low
+Video Call,25,16,38,94,Low
+Editing Videos,90,15,59,31,High
+Checking Email,53,10,20,56,Medium
+Streaming TV Show,88,3,14,37,High
+Gaming (Casual),68,5,64,39,Medium
+Gaming (Casual),45,19,24,98,Medium
+Running Simulation,32,20,16,65,Low
+Gaming (Heavy),22,8,66,53,Medium
+Video Call,49,5,62,72,Medium
+Online Class,10,16,33,38,Low
+Reading News,72,22,88,53,High
+Reading News,33,9,82,33,Low
+Editing Videos,85,12,48,70,High
+Watching Movie,28,13,64,63,Low
+File Download,84,8,21,28,High
+Checking Email,75,13,70,59,High
+Gaming (Heavy),10,17,41,90,Low
+Mobile Game,32,24,13,31,Low
+Editing Videos,57,22,66,49,Medium
+Data Backup,19,19,51,82,Low
+Gaming (Heavy),48,24,78,59,Medium
+File Download,39,10,46,87,Low
+Gaming (Heavy),41,21,55,21,Medium
+Streaming TV Show,42,5,14,21,Medium
+Checking Email,72,3,58,39,High
+Reading PDF,76,23,75,92,High
+Reading PDF,84,10,83,68,High
+Editing Photos,18,15,72,60,Low
+Strategy Game,7,5,62,32,Medium
+Listening to Music,51,7,63,20,Medium
+Data Backup,29,6,18,46,Medium
+Charging Phone,19,2,19,57,High
+Watching YouTube,20,22,62,97,Low
+Report Writing,26,18,55,21,Low
+Listening to Music,41,9,15,26,Medium
+Browsing Internet,37,23,33,21,Low
+Virtual Meeting,63,8,73,96,Medium
+Gaming (Heavy),35,15,68,80,Low
+Checking Email,51,10,50,52,Medium
+Report Writing,82,11,80,30,High
+Charging Phone,29,15,32,25,Low
+Social Media Scroll,80,21,72,82,High
+Gaming (Casual),65,5,78,97,Medium
+Editing Photos,83,17,21,44,High
+Strategy Game,81,11,37,60,High
+Watching Movie,38,12,71,82,Low
+File Download,80,24,60,51,High
+Strategy Game,69,9,20,48,Medium
+Reading News,72,20,44,71,High
+Video Call,8,13,62,91,Low
+Reading News,18,6,31,96,Medium
+Running Simulation,86,24,88,99,High
+Watching YouTube,9,19,84,88,Low
+Listening to Music,83,8,78,63,High
+File Download,66,14,12,37,Medium
+Editing Videos,58,20,20,36,Medium
+Watching Movie,13,5,62,46,Medium
+System Update,19,1,34,77,High
+Coding Project,16,6,57,92,Medium
+Checking Email,70,21,21,50,Medium
+Gaming (Heavy),62,2,23,25,High
+Writing Notes,8,7,33,90,Medium
+Virtual Meeting,35,13,32,24,Low
+Gaming (Heavy),65,13,89,28,Medium
+Mobile Game,40,15,68,65,Low
+Watching Movie,37,15,87,23,Low
+Watching Movie,52,18,11,85,Medium
+Reading PDF,89,11,31,52,High
+Reading PDF,81,6,42,63,High
+Video Call,24,24,73,74,Low
+Running Simulation,9,3,57,46,High
+File Download,15,10,35,23,Low
+Checking Email,26,18,68,55,Low
+Online Class,71,20,65,99,High
+Writing Notes,76,6,68,90,High
+Running Simulation,75,18,61,65,High
+Streaming TV Show,5,23,42,60,Low
+Data Entry,33,10,46,48,Low
+Strategy Game,44,7,20,100,Medium
+Gaming (Heavy),46,5,61,70,Medium
+Coding Project,72,2,45,87,High
+Listening to Music,11,8,89,94,Medium
+Mobile Game,72,3,79,38,High
+Video Call,42,4,38,93,Medium
+Gaming (Casual),90,21,13,68,High
+Checking Email,78,15,44,82,High
+Checking Email,23,2,55,60,High
+Reading PDF,69,18,88,61,Medium
+Online Class,87,22,23,47,High
+Gaming (Heavy),29,20,57,78,Low
+System Update,74,20,26,98,High
+Video Call,39,6,29,77,Medium
+Watching Movie,76,16,46,48,High
+Watching YouTube,15,18,43,64,Low
+Streaming TV Show,73,2,12,35,High
+Reading News,22,3,86,50,High
+Running Simulation,87,4,16,93,High
+Streaming TV Show,36,13,25,30,Low
+Virtual Meeting,78,4,48,97,High
+Charging Phone,48,20,37,79,Medium
+Watching YouTube,6,23,42,38,Low
+Streaming TV Show,22,20,67,39,Low
+Gaming (Heavy),54,11,90,78,Medium
+Mobile Game,81,19,12,38,High
+Watching YouTube,69,14,53,42,Medium
+Browsing Internet,66,2,63,67,High
+Writing Notes,40,20,64,73,Low
+Data Entry,33,14,39,22,Low
+Reading PDF,65,15,87,68,Medium
+Online Class,19,15,14,31,Low
+System Update,28,9,41,28,Low
+Mobile Game,71,13,88,75,High
+Data Backup,78,1,88,47,High
+Reading PDF,6,10,12,55,Low
+Listening to Music,36,18,24,46,Low
+Editing Photos,35,13,83,30,Low
+Virtual Meeting,82,19,25,59,High
+Mobile Game,74,11,55,41,High
+Gaming (Casual),48,24,60,83,Medium
+Gaming (Heavy),81,5,67,82,High
+Gaming (Heavy),56,15,79,65,Medium
+Reading PDF,59,1,21,26,High
+Mobile Game,79,23,46,78,High
+Mobile Game,49,18,57,100,Medium
+Video Call,16,22,72,55,Low
+Social Media Scroll,15,12,71,59,Low
+Social Media Scroll,74,3,78,72,High
+Writing Notes,56,7,88,89,Medium
+Watching YouTube,54,4,73,93,Medium
+Watching YouTube,68,5,30,72,Medium
+Listening to Music,43,4,82,51,Medium
+Browsing Internet,29,8,43,79,Medium
+Browsing Internet,73,6,54,59,High
+Checking Email,54,2,23,24,High
+Report Writing,28,11,79,45,Low
+Listening to Music,7,8,74,20,Medium
+Mobile Game,68,2,13,72,High
+Streaming TV Show,30,22,41,89,Low
+Writing Notes,14,21,84,82,Low
+Mobile Game,9,4,38,92,Medium
+Data Backup,90,9,45,32,High
+Reading News,9,1,35,90,High
+Streaming TV Show,68,18,51,97,Medium
+Streaming TV Show,18,15,67,34,Low
+Watching Movie,43,14,25,61,Medium
+File Download,64,4,40,26,Medium
+Data Backup,76,14,25,96,High
+Light Document Work,18,14,64,60,Low
+Writing Notes,61,9,52,23,Medium
+Charging Phone,28,8,22,42,Medium
+Video Call,52,2,29,59,High
+Streaming TV Show,82,6,66,79,High
+Data Backup,40,22,58,63,Low
+Virtual Meeting,47,15,65,96,Medium
+Browsing Internet,56,8,73,49,Medium
+Streaming TV Show,40,6,15,34,Medium
+Gaming (Heavy),74,3,61,86,High
+Watching YouTube,58,14,12,48,Medium
+Strategy Game,24,4,78,46,Medium
+Watching YouTube,11,4,40,76,Medium
+Running Simulation,81,7,13,61,High
+Video Call,60,11,28,45,Medium
+Reading PDF,36,23,84,76,Low
+File Download,65,16,55,86,Medium
+Checking Email,71,19,38,21,High
+Reading PDF,73,24,42,31,High
+Social Media Scroll,48,11,10,41,Medium
+Streaming TV Show,48,17,48,39,Medium
+Gaming (Heavy),30,18,10,80,Low
+Data Backup,77,10,70,74,High
+Reading PDF,40,24,15,48,Low
+Social Media Scroll,32,11,45,66,Low
+Reading News,87,17,86,60,High
+System Update,23,18,76,51,Low
+Online Class,41,23,61,83,Medium
+Charging Phone,79,24,19,93,High
+Editing Videos,42,16,60,83,Medium
+Gaming (Casual),65,19,22,42,Medium
+Strategy Game,42,15,29,96,Medium
+File Download,77,21,79,100,High
+Data Backup,8,23,74,51,Low
+Editing Photos,54,19,42,52,Medium
+Social Media Scroll,16,7,49,77,Medium
+Gaming (Heavy),24,20,36,56,Low
+Virtual Meeting,34,14,71,39,Low
+Streaming TV Show,14,16,13,34,Low
+Watching Movie,82,3,59,61,High

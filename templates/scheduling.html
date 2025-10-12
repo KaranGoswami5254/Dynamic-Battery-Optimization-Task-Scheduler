@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-4">
+    <h2>⚡ Live Process Scheduling Simulator</h2>
+
+    <!-- Show Current Scheduling Algorithm -->
+    <div class="mb-3">
+        <div class="card p-3 shadow-sm bg-light">
+            <h5>
+                📌 Currently Active Algorithm: 
+                <span id="currentAlgorithm" class="text-white fw-bold bg-dark px-2 py-1 rounded">Detecting...</span>
+            </h5>
+            <small class="text-muted">
+                The scheduler automatically selects the best algorithm depending on ⚡ battery % and CPU load.
+            </small>
+        </div>
+        <button id="startSimulation" class="btn btn-success mt-3">
+            ▶ Start Simulation
+        </button>
+    </div>
+
+    <!-- Running Process & Ready Queue -->
+    <div class="card p-3 mb-4 shadow-sm">
+        <h5>🟢 Running Process: <span id="running" class="fw-bold text-success">Idle</span></h5>
+        <h5>📂 Ready Queue: <span id="queue" class="fw-bold text-secondary">-</span></h5>
+    </div>
+
+    <!-- Charts Section -->
+    <div class="row mt-5">
+        <div class="col-md-4">
+            <div class="card p-3 shadow-sm">
+                <h5>📊 CPU Utilization</h5>
+                <canvas id="cpuChart" width="150" height="150"></canvas>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card p-3 shadow-sm">
+                <h5>🔋 Battery Usage Forecast</h5>
+                <canvas id="forecastChart" width="150" height="150"></canvas>
+                <p class="text-center mt-2">
+                    ⏳ Estimated Time Left: 
+                    <span id="batteryTime" class="fw-bold text-danger">Calculating...</span>
+                </p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card p-3 shadow-sm">
+                <h5>🔋 Battery Impact Of Scheduling Algorithm</h5>
+                <canvas id="batteryImpactChart"></canvas>
+            </div>
+        </div>
+        
+        
+        <div class="col-md-4">
+            <div class="card p-3 shadow-sm">
+                <h5>📌 Task Progress</h5>
+                <!-- dynamic canvases will be appended here -->
+                <div id="tasksProgress" class="d-flex flex-wrap gap-2"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Import dependencies in this order -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.5.4/socket.io.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
+<!-- Import our JS file -->
+<script src="{{ url_for('static', filename='js/scheduling_charts.js') }}"></script>
+
+<script>
+    // Socket connection to backend
+    const socket = io("/");
+
+    // Update currently running scheduling algorithm
+    socket.on("update_algorithm", (data) => {
+        const algoBox = document.getElementById("currentAlgorithm");
+        algoBox.textContent = data.algorithm;
+
+        // apply text color styles
+        if (data.algorithm.includes("Round Robin")) {
+            algoBox.className = "text-warning fw-bold";
+        } else if (data.algorithm.includes("Priority")) {
+            algoBox.className = "text-danger fw-bold";
+        } else if (data.algorithm.includes("FCFS")) {
+            algoBox.className = "text-success fw-bold";
+        } else {
+            algoBox.className = "text-primary fw-bold";
+        }
+    });
+
+    // Update running process
+    socket.on("update_running", (data) => {
+        document.getElementById("running").textContent = data.running;
+
+        // 🔑 If algo still says "Detecting..." but tasks are running → show last known algorithm
+        const algoBox = document.getElementById("currentAlgorithm");
+        if (algoBox.textContent === "Detecting..." && data.running !== "Idle") {
+            socket.emit("request_algorithm");  // ask backend for current algo
+        }
+    });
+
+    // Update ready queue
+    socket.on("update_queue", (data) => {
+        document.getElementById("queue").textContent = data.queue.join(", ");
+    });
+
+    // Start Simulation button
+    document.getElementById("startSimulation").addEventListener("click", () => {
+        socket.emit("start_simulation");
+    });
+
+    // Ask backend for algorithm when page loads
+    socket.emit("request_algorithm");
+
+    // Listen for scheduling updates (main simulation loop)
+    socket.on("scheduling_update", (data) => {
+    // Update running process
+    document.getElementById("running").textContent = data.running || "Idle";
+
+    // Update queue
+    document.getElementById("queue").textContent =
+        data.queue.length > 0 ? data.queue.join(", ") : "-";
+
+    // Update forecast chart + text
+    if (window.forecastChart && data.forecastText !== undefined) {
+        // Update chart data
+        window.forecastChart.data.datasets[0].data = [
+            data.forecastPercent || 0,
+            100 - (data.forecastPercent || 0)
+        ];
+        // Update label below chart
+        document.getElementById("batteryTime").textContent = data.forecastText;
+
+        window.forecastChart.update();
+    }
+});
+
+</script>
+{% endblock %}

@@ -1,0 +1,239 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container py-4">
+    <h2 class="mb-4 text-center">Task Manager Dashboard</h2>
+
+    <!-- Filter Buttons -->
+    <div class="mb-3 text-center">
+        <button type="button" class="btn btn-outline-primary filter-btn" data-status="All">All</button>
+        <button type="button" class="btn btn-outline-secondary filter-btn" data-status="Pending">Pending</button>
+        <button type="button" class="btn btn-outline-info filter-btn" data-status="In Progress">In Progress</button>
+        <button type="button" class="btn btn-outline-success filter-btn" data-status="Completed">Completed</button>
+    </div>
+
+    <!-- Add New Task Form -->
+    <form method="POST" action="{{ url_for('add_task') }}" class="mb-4 d-flex gap-2 justify-content-center flex-wrap">
+        <input type="text" name="name" placeholder="Task Name" class="form-control bg-white text-dark" required>
+        <select name="priority" class="form-select bg-white text-dark">
+            <option value="">Auto (ML decides)</option>
+            <option value="High">High</option>
+            <option value="Medium" selected>Medium</option>
+            <option value="Low">Low</option>
+        </select>
+        <button type="submit" class="btn btn-primary">Add Task</button>
+    </form>
+
+    <!-- Task Cards -->
+    <div class="row g-3" id="taskContainer">
+        {% for task in tasks %}
+        <div class="col-md-6 col-lg-4 task-card 
+            {% if task.type == 'real' %}real-task-card{% else %}simulated-task-card{% endif %}" 
+            data-status="{{ task.status }}" id="taskCard{{ task.id }}">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        {{ task.name }}
+                        {% if task.type == 'real' %}<span class="badge bg-primary">Real</span>{% endif %}
+                    </h5>
+
+                    {% if task.type != 'real' %}
+                    <span class="badge 
+                        {% if task.priority == 'High' %} bg-danger
+                        {% elif task.priority == 'Medium' %} bg-warning text-dark
+                        {% else %} bg-success text-dark {% endif %}">
+                        {{ task.priority }}
+                    </span>
+                    {% endif %}
+
+                    <!-- Status Badge -->
+                    <span class="badge task-status
+                        {% if task.status == 'Pending' %} bg-secondary text-dark
+                        {% elif task.status == 'In Progress' %} bg-info text-dark
+                        {% else %} bg-success text-dark {% endif %}">
+                        {{ task.status }}
+                    </span>
+
+                    <p class="mt-2 mb-1"><strong>Created:</strong> {{ task.created_at.strftime('%Y-%m-%d %H:%M') }}</p>
+
+                    <!-- Progress Bar -->
+                    <p class="mb-1"><strong>Progress:</strong></p>
+                    <div class="progress mb-3">
+                        <div class="progress-bar task-progress" role="progressbar" 
+                            style="width: {% if task.progress %}{{ task.progress }}%{% else %}0%{% endif %};" 
+                            aria-valuenow="{{ task.progress if task.progress else 0 }}" aria-valuemin="0" aria-valuemax="100">
+                            {% if task.progress %}{{ task.progress }}%{% else %}0%{% endif %}
+                        </div>
+                    </div>
+
+                    {% if task.type != 'real' %}
+                    <div class="d-flex gap-1">
+                        <button type="button" class="btn btn-sm btn-info" data-bs-toggle="modal" data-bs-target="#editTaskModal{{ task.id }}">Edit</button>
+                        <a href="{{ url_for('delete_task', task_id=task.id) }}" class="btn btn-sm btn-danger">Delete</a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        {% if task.type != 'real' %}
+        <!-- Edit Task Modal -->
+        <div class="modal fade" id="editTaskModal{{ task.id }}" tabindex="-1" aria-labelledby="editTaskLabel{{ task.id }}" aria-hidden="true">
+          <div class="modal-dialog">
+            <div class="modal-content">
+              <form method="POST" action="{{ url_for('edit_task', task_id=task.id) }}">
+                <div class="modal-header">
+                  <h5 class="modal-title" id="editTaskLabel{{ task.id }}">Edit Task</h5>
+                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label>Task Name</label>
+                        <input type="text" name="name" value="{{ task.name }}" class="form-control bg-white text-dark" required>
+                    </div>
+                    <div class="mb-3">
+                        <label>Priority</label>
+                        <select name="priority" class="form-select bg-white text-dark">
+                            <option value="High" {% if task.priority == 'High' %}selected{% endif %}>High</option>
+                            <option value="Medium" {% if task.priority == 'Medium' %}selected{% endif %}>Medium</option>
+                            <option value="Low" {% if task.priority == 'Low' %}selected{% endif %}>Low</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label>Status</label>
+                        <select name="status" class="form-select bg-white text-dark">
+                            <option value="Pending" {% if task.status == 'Pending' %}selected{% endif %}>Pending</option>
+                            <option value="In Progress" {% if task.status == 'In Progress' %}selected{% endif %}>In Progress</option>
+                            <option value="Completed" {% if task.status == 'Completed' %}selected{% endif %}>Completed</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label>Progress (%)</label>
+                        <input type="number" name="progress" value="{{ task.progress }}" class="form-control bg-white text-dark" min="0" max="100">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                  <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                  <button type="submit" class="btn btn-primary">Save Changes</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+        {% endif %}
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.5.4/socket.io.min.js"></script>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const filterButtons = document.querySelectorAll('.filter-btn');
+
+    filterButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const status = btn.getAttribute('data-status');
+            document.querySelectorAll('.task-card').forEach(card => {
+                const cardStatus = card.getAttribute('data-status');
+                card.style.display = (status === "All" || cardStatus === status) ? "block" : "none";
+            });
+        });
+    });
+
+    // Socket.IO connection
+    const socket = io("/");
+
+    // Listen for real-time updates for simulated tasks
+    socket.on("task_progress_update", (data) => {
+        const card = document.querySelector(`#taskCard${data.task_id}`);
+        if(!card) return;
+
+        // Update progress bar
+        const progressBar = card.querySelector(".task-progress");
+        progressBar.style.width = data.progress + "%";
+        progressBar.setAttribute("aria-valuenow", data.progress);
+        progressBar.textContent = data.progress + "%";
+
+        // Update status badge
+        const statusBadge = card.querySelector(".task-status");
+        statusBadge.textContent = data.status;
+        card.setAttribute("data-status", data.status);
+
+        if(data.status === "Completed") {
+            statusBadge.className = "badge task-status bg-success text-dark";
+        } else if(data.status === "In Progress") {
+            statusBadge.className = "badge task-status bg-info text-dark";
+        } else {
+            statusBadge.className = "badge task-status bg-secondary text-dark";
+        }
+    });
+
+    // Optional: listen for new tasks dynamically
+    socket.on("new_task", (task) => {
+        // Append/prepend task dynamically if needed
+    });
+});
+// Listen for real-time updates for real OS tasks
+socket.on("real_task_update", (data) => {
+    let card = document.querySelector(`#taskCard${data.task_id}`);
+
+    if (!card) {
+        // Create new card for real task
+        const container = document.getElementById("taskContainer");
+        const newCard = document.createElement("div");
+        newCard.className = "col-md-6 col-lg-4 task-card real-task-card";
+        newCard.id = `taskCard${data.task_id}`;
+        newCard.setAttribute("data-status", data.status);
+
+        newCard.innerHTML = `
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        ${data.name} <span class="badge bg-primary">Real</span>
+                    </h5>
+                    <span class="badge task-status bg-info text-dark">${data.status}</span>
+                    <p class="mb-1"><strong>Progress:</strong></p>
+                    <div class="progress mb-3">
+                        <div class="progress-bar task-progress" role="progressbar"
+                            style="width: ${data.progress}%;" 
+                            aria-valuenow="${data.progress}" aria-valuemin="0" aria-valuemax="100">
+                            ${data.progress}%
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        container.prepend(newCard);
+    } else {
+        // Update existing card
+        const progressBar = card.querySelector(".task-progress");
+        progressBar.style.width = data.progress + "%";
+        progressBar.setAttribute("aria-valuenow", data.progress);
+        progressBar.textContent = data.progress + "%";
+
+        const statusBadge = card.querySelector(".task-status");
+        statusBadge.textContent = data.status;
+        card.setAttribute("data-status", data.status);
+
+        if(data.status.toLowerCase() === "completed") {
+            statusBadge.className = "badge task-status bg-success text-dark";
+        } else if(data.status.toLowerCase() === "in progress" || data.status.toLowerCase() === "running") {
+            statusBadge.className = "badge task-status bg-info text-dark";
+        } else {
+            statusBadge.className = "badge task-status bg-secondary text-dark";
+        }
+    }
+});
+
+</script>
+
+<style>
+.simulated-task-card { background-color: #d4edda; }  /* green */
+.real-task-card { background-color: #cce5ff; }       /* blue */
+</style>
+{% endblock %}

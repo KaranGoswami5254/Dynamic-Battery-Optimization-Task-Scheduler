@@ -1,0 +1,203 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="container mt-4">
+
+  <!-- System Metrics Cards -->
+  <div class="row">
+    <div class="col-md-4">
+      <div class="card text-center">
+        <div class="card-header">Battery</div>
+        <div class="card-body">
+          <canvas id="batteryChart"></canvas>
+          <div class="progress mt-2">
+            <div id="batteryProgress" class="progress-bar" role="progressbar"></div>
+          </div>
+          <p id="batteryStatus" class="mt-2"></p>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-4">
+      <div class="card text-center">
+        <div class="card-header">CPU Usage</div>
+        <div class="card-body">
+          <canvas id="cpuChart"></canvas>
+          <div class="progress mt-2">
+            <div id="cpuProgress" class="progress-bar bg-warning" role="progressbar"></div>
+          </div>
+          <p id="cpuStatus" class="mt-2"></p>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-4">
+      <div class="card text-center">
+        <div class="card-header">Temperature</div>
+        <div class="card-body">
+          <canvas id="tempChart"></canvas>
+          <div class="progress mt-2">
+            <div id="tempProgress" class="progress-bar bg-danger" role="progressbar"></div>
+          </div>
+          <p id="tempStatus" class="mt-2">Temp: N/A</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scheduler Control -->
+  <!-- Scheduler Control -->
+<div class="card mt-3">
+  <div class="card-header">Scheduler Control</div>
+  <div class="card-body">
+    <p>Current Scheduler: <strong>{{ scheduler_type }}</strong></p>
+    
+    <a href="{{ url_for('set_scheduler', algo='fcfs') }}" 
+       class="btn {% if scheduler_type == 'FCFS' %}btn-success{% else %}btn-outline-primary{% endif %} me-2">
+       FCFS
+    </a>
+
+    <a href="{{ url_for('set_scheduler', algo='sjf') }}" 
+       class="btn {% if scheduler_type == 'SJF' %}btn-success{% else %}btn-outline-primary{% endif %} me-2">
+       SJF
+    </a>
+
+    <a href="{{ url_for('set_scheduler', algo='srtf') }}" 
+       class="btn {% if scheduler_type == 'SRTF' %}btn-success{% else %}btn-outline-primary{% endif %} me-2">
+       SRTF
+    </a>
+
+    <a href="{{ url_for('set_scheduler', algo='priority') }}" 
+       class="btn {% if scheduler_type == 'Priority Scheduling' %}btn-success{% else %}btn-outline-primary{% endif %} me-2">
+       Priority Scheduling
+    </a>
+
+    <a href="{{ url_for('set_scheduler', algo='rr') }}" 
+       class="btn {% if scheduler_type == 'Round Robin' %}btn-success{% else %}btn-outline-primary{% endif %}">
+       Round Robin
+    </a>
+  </div>
+</div>
+
+
+  <!-- Tasks Table -->
+  <div class="row mt-4">
+    <div class="col">
+      <h4>Tasks</h4>
+      <div class="d-flex mb-2">
+        <input id="taskSearch" class="form-control me-2 bg-white text-dark" placeholder="Search tasks..." style="border:1px solid #ced4da;">
+        <select id="taskFilter" class="form-select w-auto">
+          <option value="All">All Priorities</option>
+          <option value="High">High</option>
+          <option value="Medium">Medium</option>
+          <option value="Low">Low</option>
+        </select>
+    </div>
+    
+      <table class="table table-striped table-hover" id="taskTable">
+        <thead class="table-dark">
+          <tr>
+            <th>Name</th>
+            <th>Priority</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Threshold Sliders -->
+  <div class="row mt-4">
+    <div class="col">
+      <h4>Threshold Settings</h4>
+      <form method="POST" action="{{ url_for('update_thresholds') }}" id="thresholdForm">
+        
+        <!-- Battery -->
+      <label>Battery Low (%)</label>
+      <div class="d-flex align-items-center mb-2">
+          <input type="range" id="batterySlider" name="battery_low" min="0" max="100" value="{{ thresholds.battery_low }}" class="form-range me-2">
+          <span id="batterySliderValue">{{ thresholds.battery_low }}%</span>
+      </div>
+
+      <label>CPU High (%)</label>
+      <div class="d-flex align-items-center mb-2">
+          <input type="range" id="cpuSlider" name="cpu_high" min="0" max="100" value="{{ thresholds.cpu_high }}" class="form-range me-2">
+          <span id="cpuSliderValue">{{ thresholds.cpu_high }}%</span>
+      </div>
+
+      <label>Temperature High (°C)</label>
+      <div class="d-flex align-items-center mb-2">
+          <input type="range" id="tempSlider" name="temp_high" min="0" max="100" value="{{ thresholds.temp_high }}" class="form-range me-2">
+          <span id="tempSliderValue">{{ thresholds.temp_high }}°C</span>
+      </div>
+
+  
+        <!-- Buttons -->
+        <button class="btn btn-primary mt-2">Update Thresholds</button>
+        <button type="button" id="resetBtn" class="btn btn-secondary mt-2">Reset to Default</button>
+      </form>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  // --- Sliders live update ---
+  const batterySlider = document.getElementById("batterySlider");
+  const batteryValue = document.getElementById("batterySliderValue");
+  batterySlider.oninput = () => {
+    batteryValue.textContent = batterySlider.value + "%";
+  };
+
+  const cpuSlider = document.getElementById("cpuSlider");
+  const cpuValue = document.getElementById("cpuSliderValue");
+  cpuSlider.oninput = () => {
+    cpuValue.textContent = cpuSlider.value + "%";
+  };
+
+  const tempSlider = document.getElementById("tempSlider");
+  const tempValue = document.getElementById("tempSliderValue");
+  tempSlider.oninput = () => {
+    tempValue.textContent = tempSlider.value + "°C";
+  };
+
+  // --- Reset button ---
+  const resetBtn = document.getElementById("resetBtn");
+  const form = document.getElementById("thresholdForm");
+
+  resetBtn.addEventListener("click", () => {
+    // Default values (must match backend defaults)
+    const defaultBattery = 20;
+    const defaultCpu = 80;
+    const defaultTemp = 70;
+
+    // Reset sliders visually
+    batterySlider.value = defaultBattery;
+    batteryValue.textContent = defaultBattery + "%";
+
+    cpuSlider.value = defaultCpu;
+    cpuValue.textContent = defaultCpu + "%";
+
+    tempSlider.value = defaultTemp;
+    tempValue.textContent = defaultTemp + "°C";
+
+    // Submit the form with reset flag so backend also updates
+    const hiddenReset = document.createElement("input");
+    hiddenReset.type = "hidden";
+    hiddenReset.name = "reset";
+    hiddenReset.value = "true";
+    form.appendChild(hiddenReset);
+    form.submit();
+  });
+</script>
+
+<!-- Pass initial tasks to JS -->
+<script>
+    window.initialTasks = {{ tasks|tojson }};
+</script>
+
+<!-- Include main.js -->
+<script src="{{ url_for('static', filename='main.js') }}"></script>
+
+{% endblock %}

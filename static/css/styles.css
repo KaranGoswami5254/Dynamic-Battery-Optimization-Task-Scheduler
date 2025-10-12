@@ -1,0 +1,240 @@
+/* Global Styles */
+body {
+    background: #121212; /* Dark theme background */
+    color: #f5f5f5;      /* Default text color white */
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Navbar */
+.navbar {
+    background: linear-gradient(90deg, #1f1f1f, #292929);
+    border-bottom: 1px solid #333;
+}
+.navbar-brand, .nav-link {
+    color: #f5f5f5 !important;
+}
+.navbar-brand:hover, .nav-link:hover {
+    color: #00d4ff !important; /* Neon hover effect */
+}
+
+/* Dashboard Cards */
+.card {
+    background: #1e1e1e;
+    color: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0px 4px 10px rgba(0,0,0,0.6);
+    transition: transform 0.2s ease-in-out;
+}
+.card:hover {
+    transform: scale(1.02);
+}
+
+/* Headings */
+h1, h2, h3, h4 {
+    color: #ffffff;
+}
+
+/* Buttons */
+.btn {
+    border-radius: 8px;
+    font-weight: bold;
+}
+.btn-primary {
+    background: #00d4ff;
+    border: none;
+    color: #121212;
+}
+.btn-primary:hover {
+    background: #00aacc;
+}
+.btn-danger {
+    background: #ff4b5c;
+    border: none;
+}
+.btn-danger:hover {
+    background: #cc3a48;
+}
+
+/* Tables */
+.table {
+    color: #ffffff;
+    background: #1a1a1a;
+}
+.table th {
+    background: #292929;
+    color: #00d4ff;
+}
+.table-striped tbody tr:nth-of-type(odd) {
+    background-color: #242424;
+}
+
+/* Threshold Form */
+.form-control {
+    background: #1a1a1a;
+    border: 1px solid #333;
+    color: #ffffff;
+}
+.form-control:focus {
+    border-color: #00d4ff;
+    box-shadow: 0 0 5px #00d4ff;
+}
+
+/* Logs Section */
+.logs-box {
+    background: #1a1a1a;
+    border: 1px solid #333;
+    padding: 12px;
+    border-radius: 10px;
+    color: #cccccc;
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+/* Chart Container */
+.chart-container {
+    background: #1e1e1e;
+    padding: 15px;
+    border-radius: 12px;
+    box-shadow: 0px 4px 10px rgba(0,0,0,0.6);
+}
+
+/* General styles */
+body {
+    background: linear-gradient(135deg, #1e1e2f, #2c2c54);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: #f5f6fa;
+    min-height: 100vh;
+    margin: 0;
+}
+
+/* Navbar */
+.navbar {
+    background: rgba(40, 40, 70, 0.9);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Dashboard container */
+.dashboard {
+    padding: 30px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    gap: 25px;
+}
+
+/* Cards */
+.card {
+    background: rgba(255, 255, 255, 0.07);
+    border-radius: 20px;
+    padding: 20px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.25);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4);
+}
+
+/* Card titles */
+.card h5 {
+    font-size: 1.2rem;
+    font-weight: bold;
+    margin-bottom: 15px;
+    color: #fbc531;
+}
+
+/* Progress bar */
+.progress {
+    height: 12px;
+    border-radius: 10px;
+    overflow: hidden;
+    margin-top: 10px;
+}
+.progress-bar {
+    transition: width 0.5s ease-in-out;
+}
+
+/* Chart styling */
+canvas {
+    max-height: 300px;
+}
+
+/* Notifications */
+#notifications {
+    position: fixed;
+    top: 80px;
+    right: 20px;
+    z-index: 1050;
+}
+.notification {
+    background: rgba(0, 0, 0, 0.8);
+    color: #fff;
+    padding: 15px 20px;
+    margin-bottom: 10px;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    animation: fadeInOut 4s ease forwards;
+}
+@keyframes fadeInOut {
+    0% {opacity: 0; transform: translateX(100%);}
+    10%, 90% {opacity: 1; transform: translateX(0);}
+    100% {opacity: 0; transform: translateX(100%);}
+}
+
+/* Smooth card hover */
+.card {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.3);
+}
+
+/* Smooth button hover */
+.btn {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.btn:hover {
+    transform: translateY(-2px) scale(1.03);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+}
+
+/* Smooth badge hover */
+.badge {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.badge:hover {
+    transform: scale(1.1);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+
+/* Smooth progress bar transition */
+.progress-bar {
+    transition: width 0.8s ease-in-out;
+}
+
+/* Smooth modal animation */
+.modal.fade .modal-dialog {
+    transition: transform 0.3s ease-out, opacity 0.3s ease-out;
+    transform: translateY(-50px);
+}
+.modal.show .modal-dialog {
+    transform: translateY(0);
+}
+
+.form-label {
+    display: flex;
+    justify-content: space-between;
+  }
+
+
+
+/* Canvas inside this card */
+#batteryImpactChart {
+    width: 50px;
+    height: 200px;
+}
+
+
+
+  
