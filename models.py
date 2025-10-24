@@ -39,3 +39,5 @@ class Log(db.Model):
 
     def __repr__(self):
         return f"<Log id={self.id} task_id={self.task_id} decision={self.decision}>"
+    
+    

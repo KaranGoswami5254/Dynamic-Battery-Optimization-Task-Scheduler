@@ -112,13 +112,18 @@ function populateInitialTasks(tasks) {
     const taskTableBody = document.querySelector('#taskTable tbody');
     if (!taskTableBody) return;
     taskTableBody.innerHTML = '';
-    tasks.forEach(task => {
+
+    // Show only top 10 tasks
+    const tasksToShow = tasks.slice(0, 10);
+
+    tasksToShow.forEach(task => {
         const row = document.createElement('tr');
         row.setAttribute('id', `task-${task.id}`);
         row.innerHTML = `<td>${task.name}</td><td>${task.priority}</td><td>${task.status}</td>`;
         taskTableBody.appendChild(row);
     });
 }
+
 
 function populateInitialLogs(logs) {
     const logsTableBody = document.querySelector('#logsTable tbody');
@@ -135,14 +140,19 @@ function populateInitialLogs(logs) {
 function updateTaskTable(task) {
     const taskTableBody = document.querySelector('#taskTable tbody');
     if (!taskTableBody) return;
+
+    // Check if task already exists
     let row = document.getElementById(`task-${task.id}`);
     if (!row) {
+        // Only add if current row count < 10
+        if (taskTableBody.children.length >= 10) return;
         row = document.createElement('tr');
         row.setAttribute('id', `task-${task.id}`);
         taskTableBody.appendChild(row);
     }
     row.innerHTML = `<td>${task.name}</td><td>${task.priority}</td><td>${task.status}</td>`;
 }
+
 
 function updateLogTable(log) {
     const logsTableBody = document.querySelector('#logsTable tbody');
@@ -161,6 +171,42 @@ function updateLogTable(log) {
     logsTableBody.prepend(row); // newest on top
 }
 
+const showAllBtn = document.getElementById("showAllTasksBtn");
+const showLessBtn = document.getElementById("showLessTasksBtn");
+
+showAllBtn.addEventListener("click", () => {
+    const taskTableBody = document.querySelector('#taskTable tbody');
+    taskTableBody.innerHTML = '';
+
+    // Show all tasks
+    window.initialTasks.forEach(task => {
+        const row = document.createElement('tr');
+        row.setAttribute('id', `task-${task.id}`);
+        row.innerHTML = `<td>${task.name}</td><td>${task.priority}</td><td>${task.status}</td>`;
+        taskTableBody.appendChild(row);
+    });
+
+    // Hide Show All button, show Show Less button
+    showAllBtn.style.display = "none";
+    showLessBtn.style.display = "inline-block";
+});
+
+showLessBtn.addEventListener("click", () => {
+    const taskTableBody = document.querySelector('#taskTable tbody');
+    taskTableBody.innerHTML = '';
+
+    // Show only top 10 tasks
+    window.initialTasks.slice(0, 10).forEach(task => {
+        const row = document.createElement('tr');
+        row.setAttribute('id', `task-${task.id}`);
+        row.innerHTML = `<td>${task.name}</td><td>${task.priority}</td><td>${task.status}</td>`;
+        taskTableBody.appendChild(row);
+    });
+
+    // Hide Show Less button, show Show All button
+    showLessBtn.style.display = "none";
+    showAllBtn.style.display = "inline-block";
+});
 
 
 document.addEventListener('DOMContentLoaded', function() {

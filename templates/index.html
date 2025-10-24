@@ -47,37 +47,48 @@
 
   <!-- Scheduler Control -->
   <!-- Scheduler Control -->
-<div class="card mt-3">
-  <div class="card-header">Scheduler Control</div>
-  <div class="card-body">
-    <p>Current Scheduler: <strong>{{ scheduler_type }}</strong></p>
-    
-    <a href="{{ url_for('set_scheduler', algo='fcfs') }}" 
-       class="btn {% if scheduler_type == 'FCFS' %}btn-success{% else %}btn-outline-primary{% endif %} me-2">
-       FCFS
-    </a>
-
-    <a href="{{ url_for('set_scheduler', algo='sjf') }}" 
-       class="btn {% if scheduler_type == 'SJF' %}btn-success{% else %}btn-outline-primary{% endif %} me-2">
-       SJF
-    </a>
-
-    <a href="{{ url_for('set_scheduler', algo='srtf') }}" 
-       class="btn {% if scheduler_type == 'SRTF' %}btn-success{% else %}btn-outline-primary{% endif %} me-2">
-       SRTF
-    </a>
-
-    <a href="{{ url_for('set_scheduler', algo='priority') }}" 
-       class="btn {% if scheduler_type == 'Priority Scheduling' %}btn-success{% else %}btn-outline-primary{% endif %} me-2">
-       Priority Scheduling
-    </a>
-
-    <a href="{{ url_for('set_scheduler', algo='rr') }}" 
-       class="btn {% if scheduler_type == 'Round Robin' %}btn-success{% else %}btn-outline-primary{% endif %}">
-       Round Robin
-    </a>
+  <div class="card mt-3">
+    <div class="card-header">Scheduler Control</div>
+    <div class="card-body">
+      <p>
+        Current Scheduler: 
+        <strong class="fs-5 text-primary fw-bold">{{ scheduler_type }}</strong>
+      </p>
+  
+      <div class="d-flex flex-wrap gap-2">
+        <!-- FCFS -->
+        <a href="{{ url_for('set_scheduler', algo='fcfs') }}" 
+           class="btn {% if scheduler_type == 'FCFS' %}btn-primary text-white{% else %}btn-outline-primary{% endif %}">
+           FCFS
+        </a>
+  
+        <!-- SJF -->
+        <a href="{{ url_for('set_scheduler', algo='sjf') }}" 
+           class="btn {% if scheduler_type == 'SJF' %}btn-primary text-white{% else %}btn-outline-primary{% endif %}">
+           SJF
+        </a>
+  
+        <!-- SRTF -->
+        <a href="{{ url_for('set_scheduler', algo='srtf') }}" 
+           class="btn {% if scheduler_type == 'SRTF' %}btn-primary text-white{% else %}btn-outline-primary{% endif %}">
+           SRTF
+        </a>
+  
+        <!-- Priority Scheduling -->
+        <a href="{{ url_for('set_scheduler', algo='priority') }}" 
+           class="btn {% if scheduler_type == 'Priority Scheduling' %}btn-primary text-white{% else %}btn-outline-primary{% endif %}">
+           Priority Scheduling
+        </a>
+  
+        <!-- Round Robin -->
+        <a href="{{ url_for('set_scheduler', algo='rr') }}" 
+           class="btn {% if scheduler_type == 'Round Robin' %}btn-primary text-white{% else %}btn-outline-primary{% endif %}">
+           Round Robin
+        </a>
+      </div>
+    </div>
   </div>
-</div>
+  
 
 
   <!-- Tasks Table -->
@@ -105,6 +116,12 @@
         <tbody></tbody>
       </table>
     </div>
+    <div class="mt-2">
+      <button id="showAllTasksBtn" class="btn btn-sm btn-primary">Show All Tasks</button>
+      <button id="showLessTasksBtn" class="btn btn-sm btn-secondary">Show Less</button>
+  </div>
+  
+
   </div>
 
   <!-- Threshold Sliders -->

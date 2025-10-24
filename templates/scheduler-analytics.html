@@ -386,78 +386,119 @@
     // Global variables
     let currentReportData = null;
     let performanceChart = null;
+    let autoRefreshInterval = null;
     
     // Initialize analytics after DOM is ready
     document.addEventListener('DOMContentLoaded', function() {
+        console.log("✅ DOM loaded - initializing analytics");
         initializeAnalytics();
     });
     
-    // Auto-refresh data every 30 seconds
-function startAutoRefresh() {
-    setInterval(async () => {
-        console.log("🔄 Auto-refreshing data...");
-        await fetchBackendData();
-        // Optional: show a subtle notification
-        showNotification("Data auto-refreshed", "info");
-    }, 30000); // 30 seconds
-}
+    async function initializeAnalytics() {
+        console.log("✅ initializeAnalytics() called");
+        
+        try {
+            // Set up event listeners
+            document.getElementById('importReportBtn').addEventListener('click', importReport);
+            document.getElementById('generateReportBtn').addEventListener('click', generateReport);
+            document.getElementById('exportReportBtn').addEventListener('click', exportReport);
+            document.getElementById('reportFileInput').addEventListener('change', handleFileImport);
+            document.getElementById('chartTypeSelect').addEventListener('change', updateChartType);
 
-// Initialize analytics after DOM is ready
-document.addEventListener('DOMContentLoaded', function() {
-    initializeAnalytics();
-});
-
-async function initializeAnalytics() {
-    // Set up event listeners
-    document.getElementById('importReportBtn').addEventListener('click', importReport);
-    document.getElementById('generateReportBtn').addEventListener('click', generateReport);
-    document.getElementById('exportReportBtn').addEventListener('click', exportReport);
-    document.getElementById('reportFileInput').addEventListener('change', handleFileImport);
-    document.getElementById('chartTypeSelect').addEventListener('change', updateChartType);
-
-    // Fetch initial analytics data from backend
-    await fetchBackendData();
+            console.log("✅ Event listeners set up");
+            
+            // Wait for DOM to be fully ready
+            await new Promise(resolve => setTimeout(resolve, 500));
+            
+            // Fetch initial analytics data from backend
+            await fetchBackendData();
+            
+            // Start auto-refresh (30 second intervals)
+            startAutoRefresh();
+            
+        } catch (error) {
+            console.error("❌ Error in initializeAnalytics:", error);
+            showNotification("Failed to initialize analytics", "error");
+        }
+    }
     
-    // Start auto-refresh (30 second intervals)
-    startAutoRefresh();
-}
+    // Auto-refresh data every 30 seconds
+    function startAutoRefresh() {
+        // Clear any existing interval first
+        stopAutoRefresh();
+        
+        console.log("🔄 Starting auto-refresh (30s intervals)");
+        autoRefreshInterval = setInterval(async () => {
+            try {
+                console.log("🔄 Auto-refreshing data...");
+                await fetchBackendData();
+                showNotification("Data auto-refreshed", "info");
+            } catch (error) {
+                console.error("❌ Auto-refresh failed:", error);
+            }
+        }, 30000); // 30 seconds
+    }
+    
+    function stopAutoRefresh() {
+        if (autoRefreshInterval) {
+            console.log("🛑 Stopping auto-refresh");
+            clearInterval(autoRefreshInterval);
+            autoRefreshInterval = null;
+        }
+    }
     
     // Fetch scheduler analytics from backend
     async function fetchBackendData() {
         try {
+            console.log("🔄 Starting to fetch data from backend...");
             showNotification("Fetching latest analytics data...", "info");
+            
             const response = await fetch('/scheduler-analytics-data');
+            console.log("📡 Response status:", response.status);
+            
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
             const backendData = await response.json();
+            console.log("✅ Backend data received successfully");
     
             if (backendData.error) {
-                showNotification("Failed to load analytics data from server", "error");
-                return;
+                throw new Error(backendData.error);
             }
     
-            console.log("Backend data received:", backendData);
             loadReportData(backendData);
             showNotification("Analytics data loaded successfully!", "success");
-    
+            return true;
+
         } catch (err) {
-            console.error("Error fetching scheduler analytics:", err);
-            showNotification("Error fetching analytics data", "error");
+            console.error("❌ Error fetching scheduler analytics:", err);
+            showNotification("Error fetching analytics data: " + err.message, "error");
+            return false;
         }
     }
     
-    // Load analytics into frontend - FIXED: Use real backend data directly
+    // Load analytics into frontend
     function loadReportData(data) {
+        console.log("📊 Loading report data into frontend");
         currentReportData = data;
         updateSummaryCards();
         updateMetricsTable();
         renderPerformanceChart();
     }
     
-    // Update summary cards - FIXED: Use real backend data
+    // Update summary cards
     function updateSummaryCards() {
-        if (!currentReportData || !currentReportData.summary) return;
+        console.log("🔄 Updating summary cards");
+        
+        if (!currentReportData || !currentReportData.summary) {
+            console.error("❌ No summary data available");
+            return;
+        }
     
         const { baseline, optimized, overallImprovement } = currentReportData.summary;
-    
+        console.log("📈 Overall improvement:", overallImprovement);
+
         // Calculate individual improvements
         const throughputImp = ((optimized.throughput - baseline.throughput) / baseline.throughput * 100).toFixed(1);
         const responseTimeImp = ((baseline.responseTime - optimized.responseTime) / baseline.responseTime * 100).toFixed(1);
@@ -465,182 +506,169 @@ async function initializeAnalytics() {
     
         // Update DOM elements
         document.getElementById('overallImprovement').textContent = `+${overallImprovement}%`;
-        
         document.getElementById('throughputBaseline').textContent = baseline.throughput.toFixed(2);
         document.getElementById('throughputOptimized').textContent = optimized.throughput.toFixed(2);
         document.getElementById('throughputImprovement').textContent = `+${throughputImp}%`;
-    
         document.getElementById('responseTimeBaseline').textContent = `${baseline.responseTime.toFixed(2)}ms`;
         document.getElementById('responseTimeOptimized').textContent = `${optimized.responseTime.toFixed(2)}ms`;
         document.getElementById('responseTimeImprovement').textContent = `+${responseTimeImp}%`;
-    
         document.getElementById('cpuUtilBaseline').textContent = `${baseline.cpuUtilization.toFixed(2)}`;
         document.getElementById('cpuUtilOptimized').textContent = `${optimized.cpuUtilization.toFixed(2)}`;
         document.getElementById('cpuUtilImprovement').textContent = `+${cpuUtilImp}%`;
-    }
-    
-    // Update detailed metrics table - FIXED: Use detailedMetrics from backend
-    // Update detailed metrics table - FIXED: Properly use detailedMetrics from backend
-    // Add this at the beginning of updateMetricsTable() for debugging
-    console.log("=== DEBUG METRICS DATA ===");
-    console.log("Full currentReportData:", currentReportData);
-    console.log("Summary:", currentReportData?.summary);
-    console.log("Detailed Metrics:", currentReportData?.summary?.detailedMetrics);
-    console.log("=== END DEBUG ===");
-    function updateMetricsTable() {
-    if (!currentReportData || !currentReportData.summary || !currentReportData.summary.detailedMetrics) {
-        console.error("No detailed metrics data available:", currentReportData);
-        return;
-    }
-
-    const detailedMetrics = currentReportData.summary.detailedMetrics;
-    const tableBody = document.querySelector('#metricsTable tbody');
-    
-    if (!tableBody) {
-        console.error("Metrics table body not found");
-        return;
-    }
-
-    tableBody.innerHTML = '';
-
-    console.log("Rendering detailed metrics:", detailedMetrics);
-
-    detailedMetrics.forEach(metric => {
-        console.log("Processing metric:", metric);
         
-        const improvement = metric.improvement;
-        const status = improvement > 0 ? 'status-improved' : 
-                       improvement < 0 ? 'status-worsened' : 'status-neutral';
-        const statusText = improvement > 0 ? 'Improved' : 
-                           improvement < 0 ? 'Worsened' : 'No Change';
-
-        const row = document.createElement('tr');
-        row.innerHTML = `
-            <td>${metric.metric || 'N/A'}</td>
-            <td>${formatMetricValue(metric.baseline)}</td>
-            <td>${formatMetricValue(metric.optimized)}</td>
-            <td class="${status}">${improvement > 0 ? '+' : ''}${improvement.toFixed(1)}%</td>
-            <td class="${status}">${statusText}</td>
-        `;
-        tableBody.appendChild(row);
-    });
-}
-
-// Helper function to format metric values
-function formatMetricValue(value) {
-    if (value === null || value === undefined) return 'N/A';
-    if (typeof value === 'number') {
-        return value.toFixed(2);
+        console.log("✅ Summary cards updated");
     }
-    return value.toString();
-}
     
-    // Render performance comparison chart - FIXED: Use real backend data
-    // Render performance comparison chart - FIXED: Proper scaling for different metrics
-function renderPerformanceChart() {
-    if (!currentReportData || !currentReportData.summary) return;
+    // Update detailed metrics table
+    function updateMetricsTable() {
+        console.log("🔄 Updating metrics table");
+        
+        if (!currentReportData || !currentReportData.summary || !currentReportData.summary.detailedMetrics) {
+            console.error("❌ No detailed metrics data available");
+            return;
+        }
 
-    const ctx = document.getElementById('performanceComparisonChart').getContext('2d');
+        const detailedMetrics = currentReportData.summary.detailedMetrics;
+        const tableBody = document.querySelector('#metricsTable tbody');
+        
+        if (!tableBody) {
+            console.error("❌ Metrics table body not found");
+            return;
+        }
 
-    if (performanceChart) {
-        performanceChart.destroy();
+        tableBody.innerHTML = '';
+
+        detailedMetrics.forEach(metric => {
+            const improvement = metric.improvement;
+            const status = improvement > 0 ? 'status-improved' : 
+                           improvement < 0 ? 'status-worsened' : 'status-neutral';
+            const statusText = improvement > 0 ? 'Improved' : 
+                               improvement < 0 ? 'Worsened' : 'No Change';
+
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${metric.metric || 'N/A'}</td>
+                <td>${formatMetricValue(metric.baseline)}</td>
+                <td>${formatMetricValue(metric.optimized)}</td>
+                <td class="${status}">${improvement > 0 ? '+' : ''}${improvement.toFixed(1)}%</td>
+                <td class="${status}">${statusText}</td>
+            `;
+            tableBody.appendChild(row);
+        });
+        
+        console.log("✅ Metrics table updated");
     }
 
-    const { baseline, optimized } = currentReportData.summary;
-
-    // Create normalized data for better visualization
-    const chartData = {
-        labels: ['Throughput', 'Response Time', 'Wait Time', 'CPU Utilization', 'Context Switches', 'Turnaround Time', 'Energy Used'],
-        datasets: [
-            {
-                label: 'Baseline Scheduler',
-                data: [
-                    baseline.throughput, 
-                    baseline.responseTime, 
-                    baseline.waitTime, 
-                    baseline.cpuUtilization, 
-                    baseline.contextSwitches / 10, // Scale down context switches
-                    baseline.turnaroundTime,
-                    baseline.energyUsed * 10 // Scale up energy for visibility
-                ],
-                backgroundColor: 'rgba(231, 76, 60, 0.7)',
-                borderColor: 'rgba(231, 76, 60, 1)',
-                borderWidth: 1
-            },
-            {
-                label: 'Optimized Scheduler',
-                data: [
-                    optimized.throughput, 
-                    optimized.responseTime, 
-                    optimized.waitTime, 
-                    optimized.cpuUtilization, 
-                    optimized.contextSwitches / 10, // Scale down context switches
-                    optimized.turnaroundTime,
-                    optimized.energyUsed * 10 // Scale up energy for visibility
-                ],
-                backgroundColor: 'rgba(39, 174, 96, 0.7)',
-                borderColor: 'rgba(39, 174, 96, 1)',
-                borderWidth: 1
-            }
-        ]
-    };
-
-    performanceChart = new Chart(ctx, {
-        type: 'bar',
-        data: chartData,
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: {
-                y: { 
-                    beginAtZero: true, 
-                    title: { display: true, text: 'Values' },
-                    ticks: {
-                        callback: function(value, index, values) {
-                            // Custom formatting for scaled values
-                            const labelIndex = this.chart.scales.x.getLabelForValue(index);
-                            if (labelIndex === 4) { // Context Switches
-                                return value * 10; // Reverse the scaling for display
-                            } else if (labelIndex === 6) { // Energy Used
-                                return (value / 10).toFixed(1); // Reverse the scaling for display
-                            }
-                            return value.toFixed(1);
-                        }
-                    }
-                }
-            },
-            plugins: {
-                title: { display: true, text: 'Scheduler Performance Comparison', font: { size: 16 } },
-                tooltip: {
-                    callbacks: {
-                        label: function(context) {
-                            let label = context.dataset.label + ': ';
-                            const dataIndex = context.dataIndex;
-                            let value = context.parsed.y;
-                            
-                            // Reverse scaling for tooltip display
-                            if (dataIndex === 4) { // Context Switches
-                                value = value * 10;
-                                label += value.toFixed(0) + ' switches';
-                            } else if (dataIndex === 6) { // Energy Used
-                                value = value / 10;
-                                label += value.toFixed(2) + ' energy';
-                            } else if (dataIndex === 0) {
-                                label += value.toFixed(2) + ' tasks/sec';
-                            } else if (dataIndex === 1 || dataIndex === 2 || dataIndex === 5) {
-                                label += value.toFixed(2) + ' ms';
-                            } else if (dataIndex === 3) {
-                                label += value.toFixed(2) + ' units';
-                            }
-                            
-                            return label;
-                        }
-                    }
-                }
-            }
+    // Helper function to format metric values
+    function formatMetricValue(value) {
+        if (value === null || value === undefined) return 'N/A';
+        if (typeof value === 'number') {
+            return value.toFixed(2);
         }
-    });
-}
+        return value.toString();
+    }
+    
+    // Render performance comparison chart
+    function renderPerformanceChart() {
+        console.log("🔄 Rendering performance chart");
+        
+        if (!currentReportData || !currentReportData.summary) {
+            console.error("❌ No data for chart");
+            return;
+        }
+
+        const ctx = document.getElementById('performanceComparisonChart').getContext('2d');
+
+        // Destroy existing chart if it exists
+        if (performanceChart) {
+            performanceChart.destroy();
+        }
+
+        const { baseline, optimized } = currentReportData.summary;
+
+        // Create normalized data for better visualization
+        const chartData = {
+            labels: ['Throughput', 'Response Time', 'Wait Time', 'CPU Utilization', 'Context Switches', 'Turnaround Time', 'Energy Used'],
+            datasets: [
+                {
+                    label: 'Baseline Scheduler',
+                    data: [
+                        baseline.throughput, 
+                        baseline.responseTime, 
+                        baseline.waitTime, 
+                        baseline.cpuUtilization, 
+                        baseline.contextSwitches / 10,
+                        baseline.turnaroundTime,
+                        baseline.energyUsed * 10
+                    ],
+                    backgroundColor: 'rgba(231, 76, 60, 0.7)',
+                    borderColor: 'rgba(231, 76, 60, 1)',
+                    borderWidth: 1
+                },
+                {
+                    label: 'Optimized Scheduler',
+                    data: [
+                        optimized.throughput, 
+                        optimized.responseTime, 
+                        optimized.waitTime, 
+                        optimized.cpuUtilization, 
+                        optimized.contextSwitches / 10,
+                        optimized.turnaroundTime,
+                        optimized.energyUsed * 10
+                    ],
+                    backgroundColor: 'rgba(39, 174, 96, 0.7)',
+                    borderColor: 'rgba(39, 174, 96, 1)',
+                    borderWidth: 1
+                }
+            ]
+        };
+
+        performanceChart = new Chart(ctx, {
+            type: 'bar',
+            data: chartData,
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: { 
+                        beginAtZero: true, 
+                        title: { display: true, text: 'Values' }
+                    }
+                },
+                plugins: {
+                    title: { display: true, text: 'Scheduler Performance Comparison', font: { size: 16 } },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.dataset.label + ': ';
+                                const dataIndex = context.dataIndex;
+                                let value = context.parsed.y;
+                                
+                                // Reverse scaling for tooltip display
+                                if (dataIndex === 4) { // Context Switches
+                                    value = value * 10;
+                                    label += value.toFixed(0) + ' switches';
+                                } else if (dataIndex === 6) { // Energy Used
+                                    value = value / 10;
+                                    label += value.toFixed(2) + ' energy';
+                                } else if (dataIndex === 0) {
+                                    label += value.toFixed(2) + ' tasks/sec';
+                                } else if (dataIndex === 1 || dataIndex === 2 || dataIndex === 5) {
+                                    label += value.toFixed(2) + ' ms';
+                                } else if (dataIndex === 3) {
+                                    label += value.toFixed(2) + ' units';
+                                }
+                                
+                                return label;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+        
+        console.log("✅ Performance chart rendered");
+    }
     
     // Report file handling functions
     function importReport() { 
@@ -666,6 +694,7 @@ function renderPerformanceChart() {
     }
     
     function generateReport() {
+        console.log("🔄 Manual refresh triggered");
         fetchBackendData();
     }
     
@@ -795,7 +824,13 @@ function renderPerformanceChart() {
     }
     
     // Make functions globally available
-    window.schedulerAnalytics = { loadReportData, generateReport, exportReport };
+    window.schedulerAnalytics = { 
+        loadReportData, 
+        generateReport, 
+        exportReport,
+        startAutoRefresh,
+        stopAutoRefresh
+    };
 </script>
     
 {% endblock %}

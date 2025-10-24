@@ -244,23 +244,48 @@ def run_scheduler_with_intelligence(algorithm, app, socketio):
             )
             return
 
+            # =====================
+        # Charging Mode: Max Performance Allowed
         # =====================
-        # Adaptive Scheduler Selection
-        # =====================
-        # Keep your logic, just fix the duplicated condition & include CPU:
         if is_charging:
-            algo_name = "Round Robin"
-            scheduler = round_robin_scheduler(processes, quantum=2)
+            if cpu < 40:
+                algo_name = "Shortest Remaining Time First (SRTF)"
+                scheduler = srtf_scheduler(processes)
+            elif 40 <= cpu < 70:
+                algo_name = "Round Robin"
+                scheduler = round_robin_scheduler(processes, quantum=2)
+            else:
+                algo_name = "Priority Scheduling"
+                scheduler = priority_scheduler(processes)
+            return algo_name, scheduler
+
+        # =====================
+        # High Battery & Light CPU Load
+        # =====================
         elif battery_level > 50 and cpu < 50:
-            # Prefer SRTF when resources allow; it's preemptive and efficient
             algo_name = "Shortest Remaining Time First (SRTF)"
             scheduler = srtf_scheduler(processes)
-        elif battery_level <= 20:
+            return algo_name, scheduler
+
+        # =====================
+        # Medium Battery (20–50%)
+        # =====================
+        elif 20 < battery_level <= 50:
+            if cpu > 70:
+                algo_name = "Priority Scheduling"
+                scheduler = priority_scheduler(processes)
+            else:
+                algo_name = "Round Robin"
+                scheduler = round_robin_scheduler(processes, quantum=3)
+            return algo_name, scheduler
+
+        # =====================
+        # Low Battery Mode (≤20%)
+        # =====================
+        else:
             algo_name = "Priority Scheduling"
             scheduler = priority_scheduler(processes)
-        else:
-            algo_name = "Round Robin"
-            scheduler = round_robin_scheduler(processes, quantum=2)
+            return algo_name, scheduler
 
         # Let the frontend show the active algorithm
         socketio.emit("update_algorithm", {"algorithm": algo_name}, namespace="/")

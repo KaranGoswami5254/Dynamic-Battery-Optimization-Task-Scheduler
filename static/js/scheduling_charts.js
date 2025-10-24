@@ -35,12 +35,13 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
     
+    // --- Forecast Chart ---
     window.forecastChart = forecastCtx && new Chart(forecastCtx, {
         type: "doughnut",
         data: {
             labels: ["Forecast", "Remaining"],
             datasets: [{
-                data: [0, 100], // start at 0% forecast
+                data: [0, 100],
                 backgroundColor: ["#FFCE56", "#E0E0E0"]
             }]
         },
@@ -48,12 +49,18 @@ document.addEventListener("DOMContentLoaded", function () {
             responsive: true,
             maintainAspectRatio: false,
             cutout: "75%",
+            animation: { duration: 500 },
             plugins: {
                 legend: { display: false },
-                title: { display: true, text: "Forecast: 0%" }
+                title: {
+                    display: true,
+                    text: "Forecast: 0%",
+                    font: { size: 14 }
+                }
             }
         }
     });
+
 
 
     
@@ -118,20 +125,23 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     
         
-        if (window.forecastChart) {
-            if (data.forecastPercent !== undefined) {
-                const p = Math.max(0, Math.min(100, Number(data.forecastPercent)));
-                window.forecastChart.data.datasets[0].data = [p, 100 - p];
-            }
-            if (data.forecastText !== undefined) {
-                window.forecastChart.options.plugins.title.text = "Forecast: " + data.forecastText;
-            }
+        if (window.forecastChart && data.forecastPercent !== undefined) {
+            const p = Math.max(0, Math.min(100, Number(data.forecastPercent) || 0));
+        
+            // Update the doughnut data
+            window.forecastChart.data.datasets[0].data = [p, 100 - p];
+        
+            // Update the title safely
+            const titleText = data.forecastText ? data.forecastText : `Forecast: ${p}%`;
+            window.forecastChart.options.plugins.title.text = titleText;
+        
+            // Use normal update, animation already in chart options
             window.forecastChart.update();
         }
-
-
-    
         
+        
+        
+
         if (data.currentAlgo) {
             document.getElementById("currentAlgo").innerText = data.currentAlgo;
         }

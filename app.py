@@ -17,6 +17,7 @@ from scheduler_root import run_scheduler_with_intelligence,priority_model
 import threading
 from collections import defaultdict
 from scheduling.scheduler_analytics import scheduler_analytics_bp
+import math
 app = Flask(__name__)
 app.config.from_object(Config)
 
@@ -122,12 +123,67 @@ def calculate_battery_impact(tasks, algorithm, current_battery):
 
     return round(battery_left, 1), round(battery_used, 1)
 
-def emit_battery_impact_incremental(socketio, algorithm):
+# ============================
+# Scheduler Simulation & Battery Forecast
+# ============================
+
+def run_scheduler_with_intelligence(socketio, algorithm, app):
     """
-    Calculate and emit battery impact for all tasks (simulated + real),
-    updating the chart live in real-time for all algorithms.
-    This replaces the old per-task incremental updates.
+    Simulates task execution and emits progress to frontend.
     """
+    with app.app_context():
+        simulated_tasks = Task.query.filter_by(type='simulated').all()
+
+        for task in simulated_tasks:
+            if task.status == "Completed":
+                continue
+
+            task.status = "In Progress"
+            db.session.commit()
+
+            total_energy = random.randint(50, 100)
+            energy_used = 0
+            last_emit_progress = 0
+
+            while energy_used < total_energy:
+                socketio.sleep(0.5)  # smoother updates
+                energy_used += random.randint(5, 10)
+                progress = min(int((energy_used / total_energy) * 100), 100)
+
+                # Emit only if progress increased by 5% or complete
+                if progress - last_emit_progress >= 5 or progress == 100:
+                    task.progress = progress
+                    db.session.commit()
+                    socketio.emit("task_progress_update", {
+                        "task_id": task.id,
+                        "progress": progress,
+                        "status": "In Progress",
+                        "type": "simulated"
+                    })
+                    last_emit_progress = progress
+
+            task.progress = 100
+            task.status = "Completed"
+            task.locked = True
+            db.session.commit()
+            socketio.emit("task_progress_update", {
+                "task_id": task.id,
+                "progress": 100,
+                "status": "Completed",
+                "type": "simulated"
+            })
+
+
+def emit_battery_impact_incremental(socketio, algorithm, app):
+    """
+    Continuously calculates and emits battery forecast and algorithm impact.
+    """
+    import psutil
+    from models import Task  # make sure your Task model is imported
+
+    # To track battery history for estimating discharge rate
+    battery_history = []
+
     algo_factors = {
         "Round Robin": 1.0,
         "Priority Scheduling": 1.2,
@@ -137,94 +193,71 @@ def emit_battery_impact_incremental(socketio, algorithm):
     }
 
     while True:
-        # Fetch all tasks
-        tasks = Task.query.all()
-        battery = psutil.sensors_battery()
-        current_battery = battery.percent if battery else 100
+        socketio.sleep(1)  # emit every 1 sec
 
-        # Initialize battery usage per algorithm
-        battery_used_per_algo = {algo: 0 for algo in algo_factors.keys()}
+        with app.app_context():
+            # Get tasks from DB
+            tasks = Task.query.all()
 
-        battery_left = current_battery
+            # Get current battery %
+            battery_info = psutil.sensors_battery()
+            current_battery = battery_info.percent if battery_info else 100
 
-        for task in tasks:
-            energy = getattr(task, "energy", 10)  # fallback if energy not set
-            for algo, factor in algo_factors.items():
-                battery_used_per_algo[algo] += energy * factor
+            battery_history.append(current_battery)
+            if len(battery_history) > 10:  # keep last 10 readings
+                battery_history.pop(0)
 
-        # Adjust battery left realistically for current algorithm
-        battery_left = max(current_battery - battery_used_per_algo.get(algorithm, 0), 0)
+            # Calculate battery used per algorithm
+            battery_used_per_algo = {algo: 0 for algo in algo_factors.keys()}
+            for task in tasks:
+                energy = getattr(task, "energy", 10)  # default energy
+                for algo_name, factor in algo_factors.items():
+                    battery_used_per_algo[algo_name] += energy * factor
 
-        # Cap battery usage at 100%
-        for key in battery_used_per_algo:
-            battery_used_per_algo[key] = min(battery_used_per_algo[key], 100)
+            # Remaining battery for current algorithm
+            battery_left = max(current_battery - battery_used_per_algo.get(algorithm, 0), 0)
 
-        # Emit to frontend
-        socketio.emit("battery_algo_impact", {
-            "battery_left": round(battery_left, 1),
-            "battery_used": {k: round(v, 1) for k, v in battery_used_per_algo.items()},
-            "algorithm": algorithm
-        })
+            # Cap battery_used_per_algo values
+            battery_used_per_algo = {k: min(v, 100) for k, v in battery_used_per_algo.items()}
 
-        socketio.sleep(1)  # emit every second
+            # Estimate remaining time in minutes
+            estimated_time = None
+            if len(battery_history) >= 2:
+                delta_percent = battery_history[-2] - battery_history[0]
+                delta_time = len(battery_history)  # seconds approx
+                discharge_rate = delta_percent / delta_time if delta_time != 0 else 0
+                if discharge_rate < 0:  # battery decreasing
+                    estimated_time = round(current_battery / abs(discharge_rate), 1)
 
+            # Numeric percent for Chart.js
+            forecast_percent = max(0, min(100, round(100 - battery_left, 1)))
+            forecast_text = f"{estimated_time} mins left" if estimated_time else f"{battery_left}%"
 
-
-
-
-def run_scheduler_with_intelligence(socketio, algorithm, app):
-    simulated_tasks = Task.query.filter_by(type='simulated').all()
-
-    for task in simulated_tasks:
-        if task.status == "Completed": continue
-        task.status = "In Progress"
-        db.session.commit()
-
-        total_energy = random.randint(50, 100)
-        energy_used = 0
-        last_emit_progress = 0
-
-        while energy_used < total_energy:
-            socketio.sleep(0.5)  # smoother, not too fast
-            energy_used += random.randint(5, 10)
-            progress = min(int((energy_used / total_energy) * 100), 100)
-
-            # Emit only if progress increased by 5%
-            if progress - last_emit_progress >= 5 or progress == 100:
-                task.progress = progress
-                db.session.commit()
-                socketio.emit("task_progress_update", {
-                    "task_id": task.id,
-                    "progress": progress,
-                    "status": "In Progress",
-                    "type": "simulated"
-                })
-                last_emit_progress = progress
-
-        task.progress = 100
-        task.status = "Completed"
-        task.locked = True
-        db.session.commit()
-        socketio.emit("task_progress_update", {
-            "task_id": task.id,
-            "progress": 100,
-            "status": "Completed",
-            "type": "simulated"
-        })
-
-
-
+            # Emit to frontend
+            socketio.emit("scheduling_update", {
+                "battery_left": round(battery_left, 1),
+                "battery_used": {k: round(v, 1) for k, v in battery_used_per_algo.items()},
+                "currentAlgo": algorithm,
+                "forecastPercent": forecast_percent,  # numeric value for chart
+                "forecastText": forecast_text        # string for title
+            })
 
 # ============================
 # Real OS Tasks Integration
 # ============================
 prev_cpu_times = defaultdict(float)
 
+from datetime import datetime, date
+
 def update_real_tasks(socketio=None, poll_interval=5):
     """
-    Keep only real live OS tasks in DB.
-    Removes old tasks automatically and adds current live tasks.
+    Keep only today's real live OS tasks in DB.
+    Removes old tasks automatically, adds current live tasks,
+    and updates progress dynamically based on CPU usage.
+    Emits updates only when progress or status changes.
     """
+    last_task_state = {}  # store last progress & status for comparison
+
     while True:
         with app.app_context():
             # Get current live OS processes
@@ -238,28 +271,41 @@ def update_real_tasks(socketio=None, poll_interval=5):
                 except (psutil.NoSuchProcess, psutil.AccessDenied):
                     continue
 
-            # Delete old real tasks that are no longer alive
-            old_tasks = Task.query.filter(Task.type=='real').all()
+            # Delete old real tasks not alive or not from today
+            old_tasks = Task.query.filter(Task.type == 'real').all()
             for task in old_tasks:
-                if task.pid not in live_pids:
+                if task.pid not in live_pids or task.created_at.date() != date.today():
                     db.session.delete(task)
+                    last_task_state.pop(task.pid, None)
                     print(f"Deleted old task: {task.name} ({task.pid})")
-
             db.session.commit()
 
-            # Add current live processes if not already in DB
-            existing_pids = {task.pid for task in Task.query.filter(Task.type=='real').all()}
+            # Add new live tasks or update existing tasks
+            today_start = datetime.combine(date.today(), datetime.min.time())
+            existing_tasks = Task.query.filter(
+                Task.type == 'real',
+                Task.created_at >= today_start
+            ).all()
+            existing_pids = {task.pid for task in existing_tasks}
+
             for pid, info in live_processes.items():
+                cpu_percent = info.get('cpu_percent', 0)
+                status = info['status'].title()
+                progress = int(min(cpu_percent, 100))
+
                 if pid not in existing_pids:
+                    # Add new task
                     task = Task(
                         name=info['name'],
                         type='real',
-                        status=info['status'].title(),
-                        progress=0,
+                        status=status,
+                        progress=progress,
                         pid=pid,
-                        energy=info.get('cpu_percent', 0)
+                        energy=cpu_percent
                     )
                     db.session.add(task)
+                    db.session.commit()
+                    last_task_state[pid] = (progress, status)
                     socketio.emit("real_task_update", {
                         "task_id": task.id,
                         "pid": pid,
@@ -268,13 +314,26 @@ def update_real_tasks(socketio=None, poll_interval=5):
                         "progress": task.progress
                     })
                     print(f"Added new live task: {task.name} ({task.pid})")
-
-            db.session.commit()
+                else:
+                    # Update existing task if progress or status changed
+                    task = Task.query.filter_by(pid=pid, type='real').first()
+                    if task:
+                        prev_progress, prev_status = last_task_state.get(pid, (None, None))
+                        if progress != prev_progress or status != prev_status:
+                            task.progress = progress
+                            task.energy = cpu_percent
+                            task.status = status
+                            db.session.commit()
+                            last_task_state[pid] = (progress, status)
+                            socketio.emit("real_task_update", {
+                                "task_id": task.id,
+                                "pid": pid,
+                                "name": task.name,
+                                "status": task.status,
+                                "progress": task.progress
+                            })
 
         socketio.sleep(poll_interval)
-
-
-
 
 def real_task_scheduler():
     """
@@ -363,7 +422,10 @@ def emit_system_stats():
 battery_history = []
 
 def collect_battery_data():
+    """Collect battery history and estimate remaining time in minutes."""
     global battery_history
+    interval_seconds = 60  # assuming this function runs every 60 seconds
+
     while True:
         battery = psutil.sensors_battery()
         if battery:
@@ -371,21 +433,27 @@ def collect_battery_data():
             if len(battery_history) > 10:
                 battery_history.pop(0)
 
+            # Smooth battery percent
             smooth_percent = sum(battery_history) / len(battery_history)
 
+            # Calculate discharge rate (percent per second)
             if len(battery_history) >= 2:
                 delta_percent = battery_history[-1] - battery_history[0]
-                delta_time = len(battery_history)
+                delta_time = (len(battery_history) - 1) * interval_seconds
                 discharge_rate = delta_percent / delta_time if delta_time != 0 else 0
-                estimated_time = round(smooth_percent / abs(discharge_rate), 1) if discharge_rate < 0 else None
+
+                # Estimate remaining time in minutes
+                estimated_time = round(smooth_percent / abs(discharge_rate) / 60, 1) if discharge_rate < 0 else None
             else:
                 estimated_time = None
 
             socketio.emit("scheduling_update", {
-                "battery": smooth_percent,
+                "battery": round(smooth_percent, 1),
                 "forecast": f"{estimated_time} mins left" if estimated_time else f"{smooth_percent}%",
             })
-        socketio.sleep(60)
+
+        socketio.sleep(interval_seconds)
+
 
 # Start the background thread
 threading.Thread(target=collect_battery_data, daemon=True).start()
@@ -537,23 +605,65 @@ def add_task():
     priority = request.form.get("priority")  # user input (can be empty)
 
     if name:
-        # If priority is not provided, use ML model
+        # Predict with ML model only if user didn't manually select priority
         if (not priority or priority.strip() == "") and priority_model:
-            # Example: you can extend features later (CPU, memory, deadline, etc.)
-            # For now, just using dummy values
-            features = [[70, 50, 40, 60]]  # battery, deadline, cpu, energy → dummy
-            priority = int(priority_model.predict(features)[0])
+            # --- Real-time system stats ---
+            cpu = psutil.cpu_percent(interval=0.5)
+            battery_info = psutil.sensors_battery()
+            battery = battery_info.percent if battery_info else random.uniform(40, 90)
 
-            # Convert numeric to readable label
-            if priority == 0:
-                priority = "Low"
-            elif priority == 1:
-                priority = "Medium"
+            # --- Dynamic values based on task type ---
+            name_lower = name.lower()
+
+            # Base values
+            energy = random.uniform(10, 100)
+            deadline_hours = random.uniform(1, 24)
+
+            # Adjust dynamically by keyword
+            if any(word in name_lower for word in ["render", "simulation", "compile", "encode", "train"]):
+                energy = random.uniform(70, 100)
+                deadline_hours = random.uniform(1, 6)
+            elif any(word in name_lower for word in ["game", "video", "youtube", "movie", "stream"]):
+                energy = random.uniform(50, 90)
+                deadline_hours = random.uniform(2, 10)
+            elif any(word in name_lower for word in ["meeting", "class", "call", "chat", "zoom"]):
+                energy = random.uniform(30, 60)
+                deadline_hours = random.uniform(1, 5)
+            elif any(word in name_lower for word in ["email", "browse", "news", "document", "pdf", "notes"]):
+                energy = random.uniform(10, 40)
+                deadline_hours = random.uniform(8, 24)
+            elif any(word in name_lower for word in ["update", "backup", "install", "upload", "download"]):
+                energy = random.uniform(60, 90)
+                deadline_hours = random.uniform(1, 8)
+            elif any(word in name_lower for word in ["music", "scroll", "social", "media"]):
+                energy = random.uniform(20, 60)
+                deadline_hours = random.uniform(6, 18)
             else:
-                priority = "High"
+                # Default fallback
+                energy = random.uniform(30, 70)
+                deadline_hours = random.uniform(4, 12)
 
-            print(f"🤖 Auto-assigned priority '{priority}' to task '{name}'")
+            # --- Derived features (must match model training) ---
+            energy_per_cpu = energy / (cpu if cpu != 0 else 1)
+            cpu_battery_ratio = cpu / (battery if battery != 0 else 1)
+            deadline_inverse = 1 / (deadline_hours if deadline_hours != 0 else 1)
 
+            features = [[
+                energy, deadline_hours, cpu, battery,
+                energy_per_cpu, cpu_battery_ratio, deadline_inverse
+            ]]
+
+            # --- Predict using model ---
+            priority_pred = int(priority_model.predict(features)[0])
+
+            # --- Convert to label ---
+            priority_map = {0: "Low", 1: "Medium", 2: "High"}
+            priority = priority_map.get(priority_pred, "Medium")
+
+            print(f"🤖 Auto-assigned priority '{priority}' to '{name}' "
+                  f"(Energy={energy:.2f}, CPU={cpu:.2f}%, Battery={battery:.2f}%, Deadline={deadline_hours:.2f}h)")
+
+        # --- Save Task ---
         task = Task(name=name, priority=priority, status="Pending")
         db.session.add(task)
         db.session.commit()
